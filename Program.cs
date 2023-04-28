@@ -129,7 +129,10 @@ namespace RemoteEmail
                     case Mode.Send:
                         int.TryParse(arg_port, out port);
                         int.TryParse(arg_timeout, out timeout);
-                        bool.TryParse(arg_enablessl, out ssl);
+                        if (arg_enablessl != null)
+                        { 
+                            bool.TryParse(arg_enablessl, out ssl);
+                        }
                         Smtp.SendMail(
                             new Smtp(arg_hostaddress, 
                                 new ClientInfo[] { 
