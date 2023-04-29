@@ -39,6 +39,40 @@ namespace RemoteEmail
             arg_tcp_port = 8080;
         static void Main(string[] _args)
         {
+            if (_args.Length == 1)
+            {
+                switch (_args[0])
+                {
+                    case "/?":
+                    case "/help":
+                    case "--help":
+                    case "-help":
+                        Console.WriteLine("Written by Reduzed, 2023\n\n" +
+                            "Argument           Input           Information\n" +
+                            "--tcp-port         #               Port to listen on for incoming arguments\n" +
+                            "--dbname           text            Name of database (currently BasiqDB)\n\n" +
+                            "Incoming arguments through a .NET TCP listener\n" +
+                            "Argument           Input           Information\n" +
+                            "-mode              enum            Name of desired mode (Collect, Send, MassSend)\n" +
+                            "-collect           text            unused\n" +
+                            "-username          text            Username for SMTP service\n" +
+                            "-service           text            URI/URL of SMTP service\n" +
+                            "-port              #               Port of SMTP service\n" +
+                            "-password          text            Password for SMTP service\n" +
+                            "-hostaddress       text            E-mail from which message is being sent\n" +
+                            "-remoteaddress     text            unused\n" +
+                            "-subject           text            Subject of E-mail\n" +
+                            "-timeout           #               unused (is always set to 60000)\n" +
+                            "-enablessl         bool            Whether SSL is enabled or not\n" +
+                            "-messagefile       URI             unused" +
+                            "-recipientsfile    URI             Database name (currently BasiqDB)\n" +
+                            "-recipient         text            unused\n" +
+                            "--collectaddress   text            For sending an individual an E-mail; also for the mailing list subscription\n" +
+                            "--character        text            E-mail subscription alias\n" +
+                            "-message           text            E-mail message content, enclose in double quotations\n");
+                    break;
+                }
+            } 
             for (int i = 1; i < _args.Length; i++)
             {
                 switch (_args[i - 1])
@@ -61,6 +95,7 @@ namespace RemoteEmail
             //  based in TCP (see ModeHandler class) args get?
             while (true)
             { 
+                //  Needs Regex sanity checks
                 string[] args = ModeHandler.GetCommands(arg_tcp_port);
                 for (int i = 1; i < args.Length; i++)
                 {
@@ -144,22 +179,27 @@ namespace RemoteEmail
                                 }, arg_subject, arg_message),
                             new SmtpInfo(arg_service, arg_username, arg_password, port, ssl, timeout)
                         );
+                        WriteLine($"Recipient sent:\n   {arg_message}");
                         break;
                     case Mode.MassSend:
                         int.TryParse(arg_port, out port);
                         int.TryParse(arg_timeout, out timeout);
                         bool.TryParse(arg_enablessl, out ssl);
+                        var list = Smtp.GetRecipients(arg_recipientsfile);
                         Smtp.SendMail(
-                            new Smtp(arg_hostaddress, Smtp.GetRecipients(arg_recipientsfile), arg_subject, arg_message),
+                            new Smtp(arg_hostaddress, list, arg_subject, arg_message),
                             new SmtpInfo(arg_service, arg_username, arg_password, port, ssl, timeout)
                         );
+                        WriteLine(list.Length + $" recipients sent:\n   {arg_message}");
                         break;
                     case Mode.Collect:
+                        //  Use a more substantial database, sql?
                         Db.BlockExists("data", out Block item);
                         if (!item.HasKey(arg_charactername) && !item.HasValue(arg_collectaddress))
                         {
                             item.AddItem(arg_charactername, arg_collectaddress);
                             Db.WriteToFile();
+                            WriteLine("Collected");
                         }
                         //  write input data into database for use in Send and MassSend modes
                         break;
@@ -169,6 +209,14 @@ namespace RemoteEmail
                 }
             }
             //Environment.Exit(0);
+        }
+        internal static void WriteLine(string text, ConsoleColor color = ConsoleColor.Gray, TimeSpan timeout = default)
+        {
+            var _color = Console.ForegroundColor;
+            Console.ForegroundColor = color;
+            Console.WriteLine(text);
+            Console.ForegroundColor = _color;
+            Task.Delay(timeout);
         }
     }
 }
