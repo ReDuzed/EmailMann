@@ -129,6 +129,12 @@ namespace RemoteEmail
                     case "-message":
                         arg_message = _args[i];
                         break;
+                    case "--collectaddress":
+                        arg_collectaddress = _args[i];
+                        break;
+                    case "--character":
+                        arg_charactername = _args[i];
+                        break;
                 }
             }
             Db = new DataStore(arg_recipientsfile);
