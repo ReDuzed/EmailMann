@@ -51,6 +51,10 @@ namespace RemoteEmail
                             "Argument           Input           Information\n" +
                             "--tcp-port         #               Port to listen on for incoming arguments\n" +
                             "--dbname           text            Name of database (currently BasiqDB)\n" +
+                            "\nIncoming arguments through a .NET TCP listener\n" +
+                            "Argument           Input           Information\n" +
+                            "--collectaddress   text            For the mailing list subscription\n" +
+                            "--character        text            E-mail subscription alias\n" +
                             "-mode              enum            Name of desired mode (Collect, Send, MassSend)\n" +
                             "-collect           text            unused\n" +
                             "-username          text            Username for SMTP service\n" +
@@ -66,11 +70,7 @@ namespace RemoteEmail
                             "-recipientsfile    URI             Database name (currently BasiqDB)\n" +
                             "-recipient         text            unused\n" +
                             "-message           text            E-mail message content, enclose in double quotations\n" +
-                            "--collectaddress   text            For sending an individual an E-mail\n" +
-                            "\nIncoming arguments through a .NET TCP listener\n" +
-                            "Argument           Input           Information\n" +
-                            "--collectaddress   text            For the mailing list subscription\n" +
-                            "--character        text            E-mail subscription alias\n");
+                            "--collectaddress   text            For sending an individual an E-mail\n");
                     break;
                 }
             } 
@@ -83,51 +83,6 @@ namespace RemoteEmail
                         break;
                     case "--dbname":
                         arg_recipientsfile = _args[i];
-                        break;
-
-                    case "-mode":
-                        Enum.TryParse<Mode>(_args[i], true, out arg_mode);
-                        break;
-                    case "-collect":
-                        break;
-                    case "-username":
-                        arg_username = _args[i];
-                        break;
-                    case "-service":
-                        arg_service = _args[i];
-                        break;
-                    case "-port":
-                        arg_port = _args[i];
-                        break;
-                    case "-password":
-                        arg_password = _args[i];
-                        break;
-                    case "-hostaddress":
-                        arg_hostaddress = _args[i];
-                        break;
-                    case "-remoteaddress":
-                        arg_remoteaddress = _args[i];
-                        break;
-                    case "-subject":
-                        arg_subject = _args[i];
-                        break;
-                    case "-timeout":
-                        arg_timeout = _args[i];
-                        break;
-                    case "-enablessl":
-                        arg_enablessl = _args[i];
-                        break;
-                    case "-messagefile":
-                        arg_messagefile = _args[i];
-                        break;
-                    case "-recipientsfile":
-                        arg_recipientsfile = _args[i];
-                        break;
-                    case "-recipient":
-                        arg_recipient = _args[i];
-                        break;
-                    case "-message":
-                        arg_message = _args[i];
                         break;
                 }
             }
@@ -152,6 +107,50 @@ namespace RemoteEmail
                             break;
                         case "--character":
                             arg_charactername = args[i];
+                            break;
+                        case "-mode":
+                            Enum.TryParse<Mode>(args[i], true, out arg_mode);
+                            break;
+                        case "-collect":
+                            break;
+                        case "-username":
+                            arg_username = args[i];
+                            break;
+                        case "-service":
+                            arg_service = args[i];
+                            break;
+                        case "-port":
+                            arg_port = args[i];
+                            break;
+                        case "-password":
+                            arg_password = args[i];
+                            break;
+                        case "-hostaddress":
+                            arg_hostaddress = args[i];
+                            break;
+                        case "-remoteaddress":
+                            arg_remoteaddress = args[i];
+                            break;
+                        case "-subject":
+                            arg_subject = args[i];
+                            break;
+                        case "-timeout":
+                            arg_timeout = args[i];
+                            break;
+                        case "-enablessl":
+                            arg_enablessl = args[i];
+                            break;
+                        case "-messagefile":
+                            arg_messagefile = args[i];
+                            break;
+                        case "-recipientsfile":
+                            arg_recipientsfile = args[i];
+                            break;
+                        case "-recipient":
+                            arg_recipient = args[i];
+                            break;
+                        case "-message":
+                            arg_message = args[i];
                             break;
                     }
                 }
