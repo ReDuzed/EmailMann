@@ -51,7 +51,7 @@ namespace RemoteEmail
                             "Argument           Input           Information\n" +
                             "--tcp-port         #               Port to listen on for incoming arguments\n" +
                             "--dbname           text            Name of database (currently BasiqDB)\n" +
-                            "-mode              enum            Name of desired mode (Collect, Send, MassSend)\n" +
+                            "-mode              enum            Name of desired mode (Send, MassSend)\n" +
                             "-collect           text            unused\n" +
                             "-username          text            Username for SMTP service\n" +
                             "-service           text            URI/URL of SMTP service\n" +
@@ -70,7 +70,8 @@ namespace RemoteEmail
                             "\nIncoming arguments through a .NET TCP listener\n" +
                             "Argument           Input           Information\n" +
                             "--collectaddress   text            For the mailing list subscription\n" +
-                            "--character        text            E-mail subscription alias\n");
+                            "--character        text            E-mail subscription alias\n" +
+                            "-mode              enum            Name of desired mode (Collect)\n");
                     break;
                 }
             } 
@@ -84,7 +85,6 @@ namespace RemoteEmail
                     case "--dbname":
                         arg_recipientsfile = _args[i];
                         break;
-
                     case "-mode":
                         Enum.TryParse<Mode>(_args[i], true, out arg_mode);
                         break;
@@ -137,6 +137,43 @@ namespace RemoteEmail
                 Db.NewBlock(new[] { "init" }, "data");
                 Db.WriteToFile();
             }
+            int port = 0;
+            int timeout = 0;
+            bool ssl = true;
+            switch (arg_mode)
+            {
+                case Mode.Send:
+                    int.TryParse(arg_port, out port);
+                    int.TryParse(arg_timeout, out timeout);
+                    if (arg_enablessl != null)
+                    {
+                        bool.TryParse(arg_enablessl, out ssl);
+                    }
+                    Smtp.SendMail(
+                        new Smtp(arg_hostaddress,
+                            new ClientInfo[] {
+                                    new ClientInfo()
+                                    {
+                                        character = arg_charactername,
+                                        addr = arg_collectaddress
+                                    }
+                            }, arg_subject, arg_message),
+                        new SmtpInfo(arg_service, arg_username, arg_password, port, ssl, timeout)
+                    );
+                    WriteLine($"Recipient sent:\n   {arg_message}");
+                    return;
+                case Mode.MassSend:
+                    int.TryParse(arg_port, out port);
+                    int.TryParse(arg_timeout, out timeout);
+                    bool.TryParse(arg_enablessl, out ssl);
+                    var list = Smtp.GetRecipients(arg_recipientsfile);
+                    Smtp.SendMail(
+                        new Smtp(arg_hostaddress, list, arg_subject, arg_message),
+                        new SmtpInfo(arg_service, arg_username, arg_password, port, ssl, timeout)
+                    );
+                    WriteLine(list.Length + $" recipients sent:\n   {arg_message}");
+                    return;
+            }
             //pre-start credentials check
             //  based in TCP (see ModeHandler class) args get?
             while (true)
@@ -153,44 +190,13 @@ namespace RemoteEmail
                         case "--character":
                             arg_charactername = args[i];
                             break;
+                        case "-mode":
+                            Enum.TryParse<Mode>(_args[i], true, out arg_mode);
+                            break;
                     }
                 }
-                int port = 0;
-                int timeout = 0;
-                bool ssl = true;
                 switch (arg_mode)
                 {
-                    case Mode.Send:
-                        int.TryParse(arg_port, out port);
-                        int.TryParse(arg_timeout, out timeout);
-                        if (arg_enablessl != null)
-                        { 
-                            bool.TryParse(arg_enablessl, out ssl);
-                        }
-                        Smtp.SendMail(
-                            new Smtp(arg_hostaddress, 
-                                new ClientInfo[] { 
-                                    new ClientInfo()
-                                    { 
-                                        character = arg_charactername,
-                                        addr = arg_collectaddress 
-                                    } 
-                                }, arg_subject, arg_message),
-                            new SmtpInfo(arg_service, arg_username, arg_password, port, ssl, timeout)
-                        );
-                        WriteLine($"Recipient sent:\n   {arg_message}");
-                        break;
-                    case Mode.MassSend:
-                        int.TryParse(arg_port, out port);
-                        int.TryParse(arg_timeout, out timeout);
-                        bool.TryParse(arg_enablessl, out ssl);
-                        var list = Smtp.GetRecipients(arg_recipientsfile);
-                        Smtp.SendMail(
-                            new Smtp(arg_hostaddress, list, arg_subject, arg_message),
-                            new SmtpInfo(arg_service, arg_username, arg_password, port, ssl, timeout)
-                        );
-                        WriteLine(list.Length + $" recipients sent:\n   {arg_message}");
-                        break;
                     case Mode.Collect:
                         //  Use a more substantial database, sql?
                         Db.BlockExists("data", out Block item);
